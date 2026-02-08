@@ -1,0 +1,320 @@
+
+
+```jsx
+import React, { useMemo, useState } from "react";
+
+export default function HealthAxisReferralRevenueRecoveryCalculator() {
+  // Inputs
+  const [annualPatients, setAnnualPatients] = useState(20000);
+  const [chronicPercent, setChronicPercent] = useState(30);
+  const [currentMonthlyDietitianEncounters, setCurrentMonthlyDietitianEncounters] = useState(250);
+  const [ppsRate, setPpsRate] = useState(200);
+
+  // Config
+  const benchmarkRate = 0.10; 
+  const contactFormHref =
+    "https://qualia-health-tech.lovable.app?utm_source=HealthAxis_Calculator&utm_medium=calculator&utm_campaign=performance_blueprint";
+
+  const {
+    chronicPatients,
+    benchmarkAnnualEncounters,
+    currentAnnualEncounters,
+    encounterGap,
+    annualRevenueOpportunity,
+    attainmentPercent,
+  } = useMemo(() => {
+    const chronicPatientsCalc = annualPatients * (chronicPercent / 100);
+    const benchmarkAnnualEncountersCalc = chronicPatientsCalc * benchmarkRate;
+    const currentAnnualEncountersCalc = currentMonthlyDietitianEncounters * 12;
+
+    const gap = Math.max(
+      benchmarkAnnualEncountersCalc - currentAnnualEncountersCalc,
+      0
+    );
+
+    const opportunity = gap * ppsRate;
+
+    const attainment =
+      benchmarkAnnualEncountersCalc > 0
+        ? Math.min(
+            (currentAnnualEncountersCalc /
+              benchmarkAnnualEncountersCalc) *
+              100,
+            100
+          )
+        : 0;
+
+    return {
+      chronicPatients: chronicPatientsCalc,
+      benchmarkAnnualEncounters: benchmarkAnnualEncountersCalc,
+      currentAnnualEncounters: currentAnnualEncountersCalc,
+      encounterGap: gap,
+      annualRevenueOpportunity: opportunity,
+      attainmentPercent: attainment,
+    };
+  }, [annualPatients, chronicPercent, currentMonthlyDietitianEncounters, ppsRate]);
+
+  const progressGradient =
+    "linear-gradient(90deg, #ef4444, #f59e0b, #10b981)";
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-6">
+      <div className="w-full max-w-4xl">
+        <Header />
+
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-5 gap-6">
+          {/* Inputs */}
+          <div className="lg:col-span-2 rounded-2xl bg-slate-900/70 border border-slate-800 shadow-xl p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-100">
+                  Calculator Inputs
+                </h2>
+                <p className="text-sm text-slate-400 mt-1">
+                  Model your nutrition referral pipeline against a 10% chronic benchmark.
+                </p>
+              </div>
+              <Badge text="FQHC-ready" />
+            </div>
+
+            <div className="mt-6 space-y-5">
+              <Slider
+                label="Total Annual Patients"
+                value={annualPatients}
+                min={1000}
+                max={150000}
+                step={500}
+                onChange={setAnnualPatients}
+              />
+
+              <Slider
+                label="Estimated % with Chronic Conditions"
+                value={chronicPercent}
+                min={5}
+                max={80}
+                step={1}
+                suffix="%"
+                onChange={setChronicPercent}
+              />
+
+              <Slider
+                label="Current Monthly Dietitian Encounters"
+                value={currentMonthlyDietitianEncounters}
+                min={0}
+                max={10000}
+                step={25}
+                onChange={setCurrentMonthlyDietitianEncounters}
+              />
+
+              <Slider
+                label="Average PPS Reimbursement Rate"
+                value={ppsRate}
+                min={50}
+                max={600}
+                step={10}
+                prefix="$"
+                onChange={setPpsRate}
+              />
+            </div>
+
+            <div className="mt-6 rounded-xl bg-slate-950/60 border border-slate-800 p-4">
+              <div className="text-xs uppercase tracking-wide text-slate-400">
+                Benchmark rule
+              </div>
+              <div className="mt-1 text-sm text-slate-200">
+                10% of chronic patients receive 1 nutrition visit/year.
+              </div>
+            </div>
+          </div>
+
+          {/* Outputs */}
+          <div className="lg:col-span-3 rounded-2xl bg-slate-900/70 border border-slate-800 shadow-xl p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-100">
+                  Annual Revenue Opportunity
+                </h2>
+                <p className="text-sm text-slate-400 mt-1">
+                  The recoverable revenue if you close the gap to benchmark.
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="text-xs uppercase tracking-wide text-slate-400">
+                  Attainment
+                </div>
+                <div className="mt-1 text-sm font-semibold text-slate-100">
+                  {attainmentPercent.toFixed(1)}%
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-2xl bg-gradient-to-b from-slate-950/70 to-slate-950/40 border border-slate-800 p-6">
+              <div className="text-xs uppercase tracking-wide text-slate-400">
+                Annual Revenue Opportunity
+              </div>
+              <div className="mt-2 text-5xl font-bold text-teal-300">
+                ${Math.round(annualRevenueOpportunity).toLocaleString()}
+              </div>
+
+              <div className="mt-5">
+                <div className="flex items-center justify-between text-sm text-slate-400">
+                  <span>Current vs Benchmark</span>
+                  <span>{attainmentPercent.toFixed(1)}%</span>
+                </div>
+                <div className="mt-2 h-4 w-full rounded-full bg-slate-800 overflow-hidden">
+                  <div
+                    className="h-4 transition-all duration-500"
+                    style={{
+                      width: `${Math.max(
+                        0,
+                        Math.min(attainmentPercent, 100)
+                      )}%`,
+                      background: progressGradient,
+                    }}
+                  />
+                </div>
+                <div className="mt-2 text-xs text-slate-400">
+                  Red indicates high leakage. Green indicates benchmark alignment.
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <StatCard
+                label="Chronic Patient Estimate"
+                value={Math.round(chronicPatients).toLocaleString()}
+              />
+              <StatCard
+                label="Benchmark Nutrition Visits"
+                value={Math.round(benchmarkAnnualEncounters).toLocaleString()}
+              />
+              <StatCard
+                label="Annual Encounter Gap"
+                value={Math.round(encounterGap).toLocaleString()}
+              />
+            </div>
+
+            <div className="mt-6 rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <div className="text-sm text-slate-300 font-semibold">
+                How this is calculated
+              </div>
+              <div className="mt-2 text-sm text-slate-400 leading-relaxed">
+                Opportunity Gap = (Benchmark Annual Encounters − Current Annual Dietitian Encounters) × PPS Rate.
+                Benchmark Annual Encounters = (Total Patients × Chronic %) × 10%.
+              </div>
+            </div>
+
+            <a
+              href={contactFormHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 block w-full text-center rounded-xl py-4 text-lg font-semibold bg-teal-600 hover:bg-teal-500 transition"
+            >
+              Get My Full Performance Blueprint
+            </a>
+          </div>
+        </div>
+
+        <Footer />
+      </div>
+    </div>
+  );
+}
+
+/* ---------- UI Components ---------- */
+
+function Header() {
+  return (
+    <div className="rounded-2xl bg-slate-900/70 border border-slate-800 shadow-xl p-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <div className="text-sm text-slate-400">HealthAxis</div>
+          <h1 className="text-2xl md:text-3xl font-semibold text-slate-100 mt-1">
+            FQHC Referral Revenue Recovery Calculator
+          </h1>
+          <p className="text-slate-400 mt-2 max-w-2xl leading-relaxed">
+            Estimate dietitian referral leakage in plain financial terms and quantify the annual upside
+            from closing the gap to a chronic care benchmark.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Pill text="Executive-ready" />
+          <Pill text="PPS-aligned" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Footer() {
+  return (
+    <div className="mt-6 text-center text-xs text-slate-600">
+      © {new Date().getFullYear()} HealthAxis. Calculator outputs are directional estimates.
+    </div>
+  );
+}
+
+function StatCard({ label, value }) {
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-4">
+      <div className="text-xs uppercase tracking-wide text-slate-500">
+        {label}
+      </div>
+      <div className="mt-2 text-xl font-semibold text-slate-100">
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function Badge({ text }) {
+  return (
+    <div className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-slate-950/60 border border-slate-800 text-teal-300">
+      {text}
+    </div>
+  );
+}
+
+function Pill({ text }) {
+  return (
+    <div className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-slate-950/60 border border-slate-800 text-slate-200">
+      {text}
+    </div>
+  );
+}
+
+function Slider({
+  label,
+  value,
+  min,
+  max,
+  step,
+  onChange,
+  prefix = "",
+  suffix = "",
+}) {
+  return (
+    <div>
+      <div className="flex justify-between items-baseline gap-3 mb-1">
+        <label className="text-sm text-slate-300">{label}</label>
+        <span className="text-sm font-semibold text-slate-100 tabular-nums">
+          {prefix}
+          {Number(value).toLocaleString()}
+          {suffix}
+        </span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="w-full accent-teal-500"
+      />
+    </div>
+  );
+}
+```
+
+
